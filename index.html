@@ -1,1 +1,107 @@
-Hello World!
+<!DOCTYPE html>
+<html>
+    <head>
+        <!-- Global site tag (gtag.js) - Google Analytics -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-154580240-1"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+
+            gtag('config', 'UA-154580240-1');
+        </script>
+
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <title>KKBOX OAuth Code Flow Helper</title>
+
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/styles/vs2015.min.css">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/highlight.min.js"></script>
+    </head>
+    <body>
+        <div>&nbsp;</div>
+        <div class="container-sm">
+            <div class="card border-info">
+                <h1 class="card-header">KKBOX OAuth Helper - Example</h1>
+
+                <div class="card-body">
+                    <div id="resultInterface" style="">
+                        <div id="resultForm">
+                            <h5 class="card-title">準備工作</h5>
+                            <p class="card-text"> 
+                                <ol>
+                                    <li>
+                                        申請 <a target="_BLINK" href="https://developer.kkbox.com/">KKBOX Open API</a> 開發者帳號，並開設一組 KKBOX App
+                                    </li>
+                                    <li>
+                                        將 App ID & Secret 填寫入 <a target="_BLINK" href="https://kkbox-oauth-helper.web.app/">KKBOX OAuth Code Flow Helper</a> 工具，Return URL 請填入您要接收 access token 的前端頁面，本例為： <div class="alert alert-info" role="alert">https://clover180120.github.io/kkbox-oauth-example/callback.html</div>
+                                    </li>
+                                    <li>
+                                        將步驟 2. 取得之 Redirect URL 填入 <a target="_BLINK" href="https://developer.kkbox.com/#/app">KKBOX 開發者網站</a> 步驟 1. 建立之 App 頁面的 Redirect Uri 欄位，<font color="#f00">OOOXXX</font> 每個 KKBOX App 皆不同，格式範例：<div class="alert alert-info" role="alert">https://kkbox-oauth-helper.web.app/<font color="#f00">OOOXXX</font>/getToken</div>
+                                    </li>
+                                    <li>
+                                        建立 2. 取得之 Authorize Url 之連結，其格式為：<div class="alert alert-info" role="alert">https://account.kkbox.com/oauth2/authorize?redirect_uri=https%3A%2F%2Fkkbox-oauth-helper.web.app%2F<font color="#f00">OOOXXX</font>%2FgetToken&client_id=<font color="#f00">YOUR_APP_ID</font>&response_type=code&state=<font color="#f00">CUSTOMIZED_STATE_STRING</font></div>
+                                    </li>
+                                    <li>
+                                        實作步驟 2. 填入之 Return URL 頁面，可參考：<div class="alert alert-info" role="alert">https://clover180120.github.io/kkbox-oauth-example/callback.html</div> 
+                                    </li>
+                                </ol>
+                            </p>
+                            <p class="card-text"> 
+                                您可以從 Github 取得 <a target="_BLINK" href="https://clover180120.github.io/kkbox-oauth-example/">本前端頁面範例</a> 或是 <a target="_BLINK" href="https://clover180120.github.io/kkbox-oauth-helper/">後端 Firebase 程式碼</a>。
+                            </p>
+                            <hr />
+                            <h5 class="card-title">Code Flow Login DEMO</h5>
+                            <p class="card-text"> 
+                                Login <a href="https://account.kkbox.com/oauth2/authorize?redirect_uri=https%3A%2F%2Fkkbox-oauth-helper.web.app%2F7633c3%2FgetToken&client_id=83af94470511db6dd40c16f8daaae57a&response_type=code&state=firebase-test">KKBOX OAuth Code Flow</a>
+                            </p>
+                            <hr />
+                            <h5 class="card-title">KKBOX API DEMO <span class="badge badge-warning" id="apiStatus">No Access Token</span></h5>
+                            <p class="card-text"> 
+                                <pre><code class="JSON" id="kkResp" style="display: none;">
+                                </code></pre>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+
+        <script>
+            $(function() {
+                if (typeof(Storage) == "undefined") {
+                    console.log("not support WebStorage");
+                } else {
+                    var kkboxOAuth = JSON.parse(localStorage.getItem('kkboxOAuth'));
+
+                    if(kkboxOAuth !== null && kkboxOAuth.access_token !== undefined) {
+                        var url = 'https://api.kkbox.com/v1.1/search?q=吳卓源&type=artist&territory=TW&limit=1';
+
+                        $.ajax({
+                            'url': url,
+                            'type': 'GET',
+                            'beforeSend': function(xhr) {
+                                xhr.setRequestHeader('Authorization', 'Bearer ' + kkboxOAuth.access_token);
+                            }
+                        }).done(function(resp) {
+                            var jsonResp = JSON.stringify(resp, null, 2);
+                            $('#kkResp').text(jsonResp);
+                            hljs.initHighlighting.called = false;
+                            hljs.initHighlighting();
+                            $("#apiStatus").removeClass("badge-warning").addClass("badge-info").text("Search Artist");
+                            $('#kkResp').fadeIn();
+                        }).catch(function(err) {
+                            console.log('Error: ' + err + ' : ' + err.code + ' : ' + err.message + ' : ' + err.details);
+                        });
+                    }
+                }
+            });
+        </script>
+
+    </body>
+</html>
